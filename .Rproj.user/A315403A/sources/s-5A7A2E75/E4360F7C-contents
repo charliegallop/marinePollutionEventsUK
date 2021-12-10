@@ -1,0 +1,4 @@
+
+library(ncdf4)
+
+data <- nc_open("CEH_GEAR_monthly_GB_2019.nc")
