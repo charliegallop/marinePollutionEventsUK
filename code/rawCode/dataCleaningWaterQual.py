@@ -1,70 +1,45 @@
-# %%
 
 import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt 
 
-
-# %%
 n = 10000
-years = ['2009']
+years = ['2009', '2010', '2011', '2012', '2013']
 
-rawData = pd.read_csv(f"../../data/rawData/{years[0]}_waterQuality.csv")
-
-
-# %%
-
-# Selecting only the samples from sea water
-dfSea = rawData[rawData['sample.sampledMaterialType.label'] == 'SEA WATER']
+def tidyData(fileYear):
 
 
-# %%
-# Remove time from dataTime column
-dfSea['sample.sampleDateTime'] = dfSea['sample.sampleDateTime'].astype(str).str[:10]
+    rawData = pd.read_csv(f"/home/charlie/Documents/Uni/Exeter - Data Science/MTHM601_Fundamentals_of_Applied_Data_Science/assignment_Project/data/rawData/{fileYear}_waterQuality.csv")
 
-# # %%
-# #seperate dateTime column into day, month, year columns
-# dfSea[['year', 'month', 'day']] = dfSea['sample.sampleDateTime'].str.split('-', expand = True)
+    # Selecting only the samples from sea water
+    dfSea = rawData[rawData['sample.sampledMaterialType.label'] == 'SEA WATER']
 
-# %%
-# drop columns that are not needed
-dfSea = dfSea.drop(['sample.samplingPoint', 'codedResultInterpretation.interpretation', 'sample.isComplianceSample'], axis = 1)
+    # Remove time from dataTime column
+    dfSea['sample.sampleDateTime'] = dfSea['sample.sampleDateTime'].astype(str).str[:10]
 
-# %%
-# remove the unecessary strings from the id column
-dfSea['@id'] = dfSea['@id'].astype(str).str[-15:]
+    ## #seperate dateTime column into day, month, year columns
+    # dfSea[['year', 'month', 'day']] = dfSea['sample.sampleDateTime'].str.split('-', expand = True)
 
-# %%
-# dfSea Pivotted
-dfSeaP = pd.pivot_table(dfSea, values = 'result', index = ['@id'], columns = 'determinand.label')
-dfSeaP = dfSeaP.dropna(axis=1, how='all')
+    # drop columns that are not needed
+    dfSea = dfSea.drop(['sample.samplingPoint', 'codedResultInterpretation.interpretation', 'sample.isComplianceSample'], axis = 1)
 
-# %%
-dfSeaPMerged = dfSeaP.merge(dfSea[['@id', 'sample.samplingPoint.notation', 'sample.samplingPoint.label',
-       'sample.samplingPoint.easting', 'sample.samplingPoint.northing', 'sample.sampleDateTime']], how = 'left', on = '@id')
-dfSeaPMerged.head()
+    # remove the unecessary strings from the id column
+    dfSea['@id'] = dfSea['@id'].astype(str).str[-15:]
 
-# Group together so that each recording for each data and location is grouped together
-dfSeaPMerged = dfSeaPMerged.groupby(['sample.sampleDateTime', 'sample.samplingPoint.label', 'sample.samplingPoint.easting', 'sample.samplingPoint.northing']).sum().reset_index()
+    # dfSea Pivotted
+    dfSeaP = pd.pivot_table(dfSea, values = 'result', index = ['@id'], columns = 'determinand.label')
+    dfSeaP = dfSeaP.dropna(axis=1, how='all')
+    dfSeaPMerged = dfSeaP.merge(dfSea[['@id', 'sample.samplingPoint.notation', 'sample.samplingPoint.label',
+        'sample.samplingPoint.easting', 'sample.samplingPoint.northing', 'sample.sampleDateTime']], how = 'left', on = '@id')
+    dfSeaPMerged.head()
 
-# %%
-dfEcoli = dfSea[dfSea['determinand.label'] == "E.coli C-MF"]
+    # Group together so that each recording for each data and location is grouped together
+    dfSeaPMerged = dfSeaPMerged.groupby(['sample.sampleDateTime', 'sample.samplingPoint.label', 'sample.samplingPoint.easting', 'sample.samplingPoint.northing']).sum().reset_index()
+
+    dfSeaPMerged.to_csv(f'/home/charlie/Documents/Uni/Exeter - Data Science/MTHM601_Fundamentals_of_Applied_Data_Science/assignment_Project/data/tidyData/{fileYear}_waterQuality_tidy.csv')
 
 
-
-
-
-#%%
-dfEcoli = dfEcoli.drop(['sample.samplingPoint.notation', 'sample.samplingPoint.label', 'determinand.definition', 'determinand.notation', 'resultQualifier.notation', 'sample.purpose.label'], axis = 1)
-dfEcoli.pivot_table(index = ['@id', 'year', 'month','day'],  columns = 'determinand.label', values = ['result', 'determinand.unit.label', 'sample.samplingPoint.easting', 'sample.samplingPoint.northing'])
-
-
-
-# %%
-dfEcoli = dfSea[dfSea['determinand.label'] == "E.coli C-MF"]
-dfEcoli = dfEcoli[dfEcoli['result'] > 500]
-plt.hist(dfEcoli['result'], bins = [100, 200, 300, 400, 500, 600, 700])
-
-
-# %%
+for year in years:
+    tidyData(year)
+   
