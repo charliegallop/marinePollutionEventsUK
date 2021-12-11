@@ -5,7 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt 
 
 n = 10000
-years = ['2009', '2010', '2011', '2012', '2013']
+years = ['2009', '2010', '2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019']
 
 def tidyData(fileYear):
 
@@ -37,9 +37,21 @@ def tidyData(fileYear):
     # Group together so that each recording for each data and location is grouped together
     dfSeaPMerged = dfSeaPMerged.groupby(['sample.sampleDateTime', 'sample.samplingPoint.label', 'sample.samplingPoint.easting', 'sample.samplingPoint.northing']).sum().reset_index()
 
-    dfSeaPMerged.to_csv(f'/home/charlie/Documents/Uni/Exeter - Data Science/MTHM601_Fundamentals_of_Applied_Data_Science/assignment_Project/data/tidyData/{fileYear}_waterQuality_tidy.csv')
+
+    return dfSeaPMerged
+
+  #  dfSeaPMerged.to_csv(f'/home/charlie/Documents/Uni/Exeter - Data Science/MTHM601_Fundamentals_of_Applied_Data_Science/assignment_Project/data/tidyData/{fileYear}_waterQuality_tidy.csv')
 
 
-for year in years:
-    tidyData(year)
+for count, year in enumerate(years):
+    if count == 0:
+        df = tidyData(year)
+        print("count is 0")
+    else:
+        print("count is 1")
+        df2 = tidyData(year)
+        df = pd.concat([df, df2], ignore_index = True)
+
+df.to_csv(f'/home/charlie/Documents/Uni/Exeter - Data Science/MTHM601_Fundamentals_of_Applied_Data_Science/assignment_Project/data/tidyData/all_waterQual.csv')
+
    
