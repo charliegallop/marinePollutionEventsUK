@@ -9,9 +9,9 @@ ds = nc.Dataset(fn)
 rainfall = ds['rainfall_amount'][:]
 y = ds['y'][:]
 x = ds['x'][:]
-lat
+time = ds['time'][:]
 # %%
-rainfall.shape
+rainfall[1, 10, 10]
 # %%
 for i in range(12):
     print(rainfall[i, 501, 351])
