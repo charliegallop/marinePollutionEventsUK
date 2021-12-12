@@ -1,4 +1,5 @@
 
+# %%
 import os
 import numpy as np
 import pandas as pd
@@ -6,14 +7,17 @@ import matplotlib.pyplot as plt
 
 n = 10000
 years = ['2009', '2010', '2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019']
+years.reverse()
+determinandsOfInterst = ['E.coli C-MF', 'Bac All', 'Bac Ruminant', 'Horse Bact', 'Human Mito', 'IE Conf', 'Salinity', 'SewageDebris', 'Temp Water', 'pH', 'BW: Plastics', 'BWP - A.B.', 'BWP - A.F.', 'BWP - Ma', 'BWP - O.L.']
 
+# %%
 def tidyData(fileYear):
 
 
     rawData = pd.read_csv(f"/home/charlie/Documents/Uni/Exeter - Data Science/MTHM601_Fundamentals_of_Applied_Data_Science/assignment_Project/data/rawData/{fileYear}_waterQuality.csv")
 
     # Selecting only the samples from sea water
-    dfSea = rawData[rawData['sample.sampledMaterialType.label'] == 'SEA WATER']
+    dfSea = rawData.loc[(rawData['sample.sampledMaterialType.label'] == 'SEA WATER')] # | (rawData['sample.sampledMaterialType.label'] == 'ESTUARINE WATER')
 
     # Remove time from dataTime column
     dfSea['sample.sampleDateTime'] = dfSea['sample.sampleDateTime'].astype(str).str[:10]
@@ -27,15 +31,19 @@ def tidyData(fileYear):
     # remove the unecessary strings from the id column
     dfSea['@id'] = dfSea['@id'].astype(str).str[-15:]
 
+
+    # Select only the determinands of interest before pivotting
+    dfSea = dfSea[dfSea['determinand.label'].isin(determinandsOfInterst)]
+
     # dfSea Pivotted
-    dfSeaP = pd.pivot_table(dfSea, values = 'result', index = ['@id'], columns = 'determinand.label')
+    dfSeaP = pd.pivot_table(dfSea, values = 'result', index = ['@id'], columns = 'determinand.label', aggfunc='mean')
     dfSeaP = dfSeaP.dropna(axis=1, how='all')
     dfSeaPMerged = dfSeaP.merge(dfSea[['@id', 'sample.samplingPoint.notation', 'sample.samplingPoint.label',
         'sample.samplingPoint.easting', 'sample.samplingPoint.northing', 'sample.sampleDateTime']], how = 'left', on = '@id')
     dfSeaPMerged.head()
 
     # Group together so that each recording for each data and location is grouped together
-    dfSeaPMerged = dfSeaPMerged.groupby(['sample.sampleDateTime', 'sample.samplingPoint.label', 'sample.samplingPoint.easting', 'sample.samplingPoint.northing']).sum().reset_index()
+    dfSeaPMerged = dfSeaPMerged.groupby(['sample.sampleDateTime', 'sample.samplingPoint.label', 'sample.samplingPoint.easting', 'sample.samplingPoint.northing'], dropna = False).sum().reset_index()
 
 
     return dfSeaPMerged
@@ -45,13 +53,11 @@ def tidyData(fileYear):
 
 for count, year in enumerate(years):
     if count == 0:
+        print(f"working on {year}")
         df = tidyData(year)
-        print("count is 0")
     else:
-        print("count is 1")
+        print(f"working on {year}")
         df2 = tidyData(year)
         df = pd.concat([df, df2], ignore_index = True)
 
 df.to_csv(f'/home/charlie/Documents/Uni/Exeter - Data Science/MTHM601_Fundamentals_of_Applied_Data_Science/assignment_Project/data/tidyData/all_waterQual.csv')
-
-   
