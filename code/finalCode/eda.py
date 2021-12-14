@@ -10,9 +10,6 @@ df = pd.read_csv('/home/charlie/Documents/Uni/Exeter - Data Science/MTHM601_Fund
 
 df = df.rename(columns = {'sample.sampleDateTime':'Date', 'sample.samplingPoint.label':'location', 'sample.samplingPoint.easting':'easting', 'sample.samplingPoint.northing':'northing'})
 
-df['Date'].nunique()
-df.columns
-df['location']
 # %%
 y = 'IE Conf'
 x = 'Temp Water'
@@ -24,6 +21,11 @@ df.loc[(df[y] >= 0) & (df['location'] == 'TYNEMOUTH CULLERCOATS (04900)') & (df[
 
 # %%
 
+def getRainfall(df):
+    df = df
+    df['rainfall'] = 
+
+
 
 df["xRainfallCoords"] = round((1250000 - df['northing'])/1000)
 df["yRainfallCoords"] = round(df['easting']/1000)
@@ -32,33 +34,35 @@ df["yRainfallCoords"] = round(df['easting']/1000)
 
 x = df['xRainfallCoords'].loc[(df['location'] == 'CULLERCOATS BW INVESTIG 2 : BEDROCK POOL') & (df['Date'] == '2019-01-03 00:00:00')]
 y = df['yRainfallCoords'].loc[(df['location'] == 'CULLERCOATS BW INVESTIG 2 : BEDROCK POOL') & (df['Date'] == '2019-01-03 00:00:00')]
-
+x = int(x.values[0])
+y = int(y.values[0])
 
 
 # %%
 
+rainDf300 = pd.read_csv("/home/charlie/Documents/Uni/Exeter - Data Science/MTHM601_Fundamentals_of_Applied_Data_Science/assignment_Project/data/tidyData/300rainfallMatrix.csv")
+
+# Function for estimating the rainfall for locations that are out of bounds
+# in the rainfall data. It takes an average of the non-nan values up to k 
+# neighbours
 def estRain(x, y, data, neighbors):
     df = data
     x, y = x, y
-    neigh = neighbors
-    nn = np.empty((0,0), int)
-    for i in range(neigh):
-        for j in range(neigh):
-            nn = np.append(nn, df.iloc[x - j, y+i])
-            nn = np.append(nn, df.iloc[x + j, y+i])
-            
-    print(np.nanmean(nn))
+    numn = neighbors
+    # nn = np.empty((numn+7, numn+7))
+    nn = []
+    for i in range(-numn, numn + 1):
+        templist = []
+        for j in range(-numn, numn + 1):
+            valNeighbour = df.iloc[x + i, y + j]
+            templist.append(valNeighbour)
+        nn.append(templist)
+    
+    nearest_neighbours = np.array(nn)
+    return np.nanmean(nearest_neighbours)
 
-
-
-estRain(x, y, rainDf, 10)
-
-
-
-# %%
-
-
-
+    
+print(estRain(x, y, rainDf300, 5))
 
 
 # %%
@@ -66,7 +70,6 @@ estRain(x, y, rainDf, 10)
 
 from datetime import datetime
 day_of_year = df['Date'][600].strftime('%j')
-
 
 
 # %%

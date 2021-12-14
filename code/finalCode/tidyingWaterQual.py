@@ -9,11 +9,16 @@ n = 10000
 years = ['2009', '2010', '2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019']
 years.reverse()
 determinandsOfInterst = ['E.coli C-MF', 'Bac All', 'Bac Ruminant', 'Horse Bact', 'Human Mito', 'IE Conf', 'Salinity', 'SewageDebris', 'Temp Water', 'pH', 'BW: Plastics', 'BWP - A.B.', 'BWP - A.F.', 'BWP - Ma', 'BWP - O.L.']
-
+tidyDataDir = '/home/charlie/Documents/Uni/Exeter - Data Science/MTHM601_Fundamentals_of_Applied_Data_Science/assignment_Project/data/tidyData' 
 # %%
-def tidyData(fileYear):
 
-
+# The process for tidying a single csv
+def tidyData(fileYear, DOI):
+    
+    # The process for tidying a single csv
+    
+    
+    
     rawData = pd.read_csv(f"/home/charlie/Documents/Uni/Exeter - Data Science/MTHM601_Fundamentals_of_Applied_Data_Science/assignment_Project/data/rawData/{fileYear}_waterQuality.csv")
 
     # Selecting only the samples from sea water
@@ -33,7 +38,7 @@ def tidyData(fileYear):
 
 
     # Select only the determinands of interest before pivotting
-    dfSea = dfSea[dfSea['determinand.label'].isin(determinandsOfInterst)]
+    dfSea = dfSea[dfSea['determinand.label'].isin(DOI)]
 
     # dfSea Pivotted
     dfSeaP = pd.pivot_table(dfSea, values = 'result', index = ['@id'], columns = 'determinand.label', aggfunc='mean')
@@ -44,20 +49,60 @@ def tidyData(fileYear):
 
     # Group together so that each recording for each data and location is grouped together
     dfSeaPMerged = dfSeaPMerged.groupby(['sample.sampleDateTime', 'sample.samplingPoint.label', 'sample.samplingPoint.easting', 'sample.samplingPoint.northing'], dropna = False).sum().reset_index()
-
-
+   
     return dfSeaPMerged
+
+
+def makeMergedCSV(years, saveTo, nameOutput):
+    
+    # This takes in each file in the data folder for the defined years and
+    # does the respective cleaning and pivoting of the data to get it into useable
+    # format. It then appends all the years together and saves the output as a
+    # csv
 
   #  dfSeaPMerged.to_csv(f'/home/charlie/Documents/Uni/Exeter - Data Science/MTHM601_Fundamentals_of_Applied_Data_Science/assignment_Project/data/tidyData/{fileYear}_waterQuality_tidy.csv')
 
 
-for count, year in enumerate(years):
-    if count == 0:
-        print(f"working on {year}")
-        df = tidyData(year)
-    else:
-        print(f"working on {year}")
-        df2 = tidyData(year)
-        df = pd.concat([df, df2], ignore_index = True)
+    for count, year in enumerate(years):
+        if count == 0:
+            print(f"working on {year}")
+            df = tidyData(year, determinandsOfInterst)
+            print(f"succesfully finished {year}")
+        else:
+            print(f"working on {year}")
+            df2 = tidyData(year, determinandsOfInterst)
+            df = pd.concat([df, df2], ignore_index = True)
+            print(f"succesfully finished {year}")
+            
+    print("finished merge succesfully")
+    df.to_csv(f'{saveTo}/{nameOutput}')
+    print(f"saved as csv to {saveTo}/{nameOutput}")
+    
+# %%
 
-df.to_csv(f'/home/charlie/Documents/Uni/Exeter - Data Science/MTHM601_Fundamentals_of_Applied_Data_Science/assignment_Project/data/tidyData/all_waterQual.csv')
+makeMergedCSV(years, tidyDataDir, 'all_waterQual.csv')
+
+
+
+# %%
+# Function for estimating the rainfall for locations that are out of bounds
+# in the rainfall data. It takes an average of the non-nan values up to k 
+# neighbours
+def estRain(x, y, data, day, neighbors):
+    df = data[day]
+    x, y = x, y
+    numn = neighbors
+    # nn = np.empty((numn+7, numn+7))
+    nn = np.empty(0)
+    for i in range(-numn, numn + 1):
+        templist = np.empty(0)
+        for j in range(-numn, numn + 1):
+            valNeighbour = df.iloc[x + i, y + j]
+            templist = np.append(templist, [valNeighbour], axis = 0)
+        nn = np.append(nn, templist, axis = 0)
+    
+    nearest_neighbours = nn.reshape(numn*2+1, numn*2+1)
+    return np.nanmean(nearest_neighbours)
+
+    
+nn = estRain(505, 248, rainDaysList, 0, 10)
