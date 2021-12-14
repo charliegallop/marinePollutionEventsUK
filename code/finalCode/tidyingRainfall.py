@@ -5,14 +5,43 @@ import numpy.ma as ma
 import pandas as pd
 import seaborn as sns
 
-# day = 0
-homeDir = '/home/charlie/Documents/Uni/Exeter - Data Science/MTHM601_Fundamentals_of_Applied_Data_Science/assignment_Project'
+https://catalogue.ceh.ac.uk/datastore/eidchub/dbf13dd5-90cd-457a-a986-f2f9dd97e93c/GB/daily/CEH_GEAR_daily_GB_1891.nc
 
-# %%
+#%%
 
-# Load the netCDF dataset in
+def Rainfall3DArray(fileName, fileLocation):
+    import netCDF4 as nc
+    import numpy as np
+    import numpy.ma as ma
+    import pandas as pd
 
-ds = nc.Dataset(f'{homeDir}/data/rawData/2019_daily_rainfall.nc')
+    locationOfFile = fileLocation
+    fileName = fileName
+    
+    # Load the netCDF dataset in
+    
+    ds = nc.Dataset(f'{locationOfFile}{fileName}')
+    
+    # Create a list containing the 1251x701 2d grid matrix of rainfall for each
+    # day. Where the x value (1251) is the y northing and the y value
+    # (701) is the x easting of the sample location.
+    
+    days = ds['rainfall_amount'].shape[0]
+    rainDaysList = []
+    
+    for day in range(days):
+        if day == 0:
+            rainDaysList =  [pd.DataFrame(ds['rainfall_amount'][day])]
+        else:
+            rainDaysList.append(pd.DataFrame(ds['rainfall_amount'][day]))
+            
+    return rainDaysList
+
+
+#%%
+
+rainfall = Rainfall3DArray('2019_daily_rainfall.nc', '/home/charlie/Documents/Uni/Exeter - Data Science/MTHM601_Fundamentals_of_Applied_Data_Science/assignment_Project/data/rawData/')
+
 
 # %%
 
@@ -22,21 +51,6 @@ print(ds.variables.keys())
 # %%
 print(ds.variables['rainfall_amount']) # look at variable description
 
-
-# %%
-
-# Create a list containing the 1251x701 2d grid matrix of rainfall for each
-# day. Where the x value (1251) is the y northing and the y value
-# (701) is the x easting of the sample location.
-
-days = ds['rainfall_amount'].shape[0]
-rainDaysList = []
-
-for day in range(days):
-    if day == 0:
-        rainDaysList =  [pd.DataFrame(ds['rainfall_amount'][day])]
-    else:
-        rainDaysList.append(pd.DataFrame(ds['rainfall_amount'][day]))
 
 
 # %%
