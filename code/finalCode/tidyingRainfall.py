@@ -5,7 +5,6 @@ import numpy.ma as ma
 import pandas as pd
 import seaborn as sns
 
-https://catalogue.ceh.ac.uk/datastore/eidchub/dbf13dd5-90cd-457a-a986-f2f9dd97e93c/GB/daily/CEH_GEAR_daily_GB_1891.nc
 
 #%%
 
