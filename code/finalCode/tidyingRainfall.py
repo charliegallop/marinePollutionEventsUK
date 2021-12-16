@@ -39,7 +39,7 @@ def Rainfall3DArray(fileName, fileLocation):
 
 #%%
 
-rainfall = Rainfall3DArray('2019_daily_rainfall.nc', '/home/charlie/Documents/Uni/Exeter - Data Science/MTHM601_Fundamentals_of_Applied_Data_Science/assignment_Project/data/rawData/')
+rainfall2019 = Rainfall3DArray('2019_daily_rainfall.nc', '/home/charlie/Documents/Uni/Exeter - Data Science/MTHM601_Fundamentals_of_Applied_Data_Science/assignment_Project/data/rawData/')
 
 
 # %%

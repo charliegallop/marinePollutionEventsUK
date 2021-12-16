@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 n = 10000
 years = ['2009', '2010', '2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019']
 years.reverse()
-determinandsOfInterst = ['E.coli C-MF', 'Bac All', 'Bac Ruminant', 'Horse Bact', 'Human Mito', 'IE Conf', 'Salinity', 'SewageDebris', 'Temp Water', 'pH', 'BW: Plastics', 'BWP - A.B.', 'BWP - A.F.', 'BWP - Ma', 'BWP - O.L.']
+determinandsOfInterest = ['E.coli C-MF', 'Bac All', 'Bac Ruminant', 'Horse Bact', 'Human Mito', 'IE Conf', 'Salinity', 'SewageDebris', 'Temp Water', 'pH', 'BW: Plastics', 'BWP - A.B.', 'BWP - A.F.', 'BWP - Ma', 'BWP - O.L.']
 tidyDataDir = '/home/charlie/Documents/Uni/Exeter - Data Science/MTHM601_Fundamentals_of_Applied_Data_Science/assignment_Project/data/tidyData' 
 # %%
 
@@ -40,17 +40,25 @@ def tidyData(fileYear, DOI):
     # Select only the determinands of interest before pivotting
     dfSea = dfSea[dfSea['determinand.label'].isin(DOI)]
 
+   
     # dfSea Pivotted
-    dfSeaP = pd.pivot_table(dfSea, values = 'result', index = ['@id'], columns = 'determinand.label', aggfunc='mean')
-    dfSeaP = dfSeaP.dropna(axis=1, how='all')
+    dfSeaP = pd.pivot_table(dfSea, values = 'result', index = ['@id'], columns = 'determinand.label', fill_value=None)
+    
+    # dfSeaP = dfSeaP.dropna(axis=1, how='all')
     dfSeaPMerged = dfSeaP.merge(dfSea[['@id', 'sample.samplingPoint.notation', 'sample.samplingPoint.label',
         'sample.samplingPoint.easting', 'sample.samplingPoint.northing', 'sample.sampleDateTime']], how = 'left', on = '@id')
-    dfSeaPMerged.head()
-
-    # Group together so that each recording for each data and location is grouped together
-    dfSeaPMerged = dfSeaPMerged.groupby(['sample.sampleDateTime', 'sample.samplingPoint.label', 'sample.samplingPoint.easting', 'sample.samplingPoint.northing'], dropna = False).sum().reset_index()
-   
+    
+    dfSeaPMerged = dfSeaPMerged.rename(columns = {'sample.sampleDateTime':'Date', 'sample.samplingPoint.label':'location', 'sample.samplingPoint.easting':'easting', 'sample.samplingPoint.northing':'northing'})
+  
+    dfSeaPMerged = dfSeaPMerged.groupby(by=['sample.samplingPoint.notation', 'location', 'easting', 'northing', 'Date']).mean().reset_index()
     return dfSeaPMerged
+   
+
+    ## Group together so that each recording for each data and location is grouped together
+    #dfSeaPMerged = dfSeaPMerged.groupby(['sample.sampleDateTime', 'sample.samplingPoint.label', 'sample.samplingPoint.easting', 'sample.samplingPoint.northing'], dropna = False).sum().reset_index()
+   
+    
+
 
 
 def makeMergedCSV(years, saveTo, nameOutput):
@@ -66,11 +74,11 @@ def makeMergedCSV(years, saveTo, nameOutput):
     for count, year in enumerate(years):
         if count == 0:
             print(f"working on {year}")
-            df = tidyData(year, determinandsOfInterst)
+            df = tidyData(year, determinandsOfInterest)
             print(f"succesfully finished {year}")
         else:
             print(f"working on {year}")
-            df2 = tidyData(year, determinandsOfInterst)
+            df2 = tidyData(year, determinandsOfInterest)
             df = pd.concat([df, df2], ignore_index = True)
             print(f"succesfully finished {year}")
             
@@ -78,8 +86,8 @@ def makeMergedCSV(years, saveTo, nameOutput):
     df.to_csv(f'{saveTo}/{nameOutput}')
     print(f"saved as csv to {saveTo}/{nameOutput}")
     
-# %%
 
+# %%
 makeMergedCSV(years, tidyDataDir, 'all_waterQual.csv')
 
 
